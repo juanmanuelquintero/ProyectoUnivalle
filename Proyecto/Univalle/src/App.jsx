@@ -8,7 +8,20 @@ function App() {
   const [Informacion, setInformacion] = useState([]);
   const [bandera, setBandera] = useState("False");
   const navegar = useNavigate();
+  const [ip , setip] = useState("")
 
+  useEffect(()=> {
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => setip(data.ip))
+      .catch(() => setip('No se pudo obtener'));
+  },[])
+
+  function Ip () {
+    console.log(ip)
+  }
+
+  
   useEffect(() => {
     if (Codigo.length === 9) {
       Estudiante();
@@ -27,6 +40,8 @@ function App() {
               .post(`http://127.0.0.1:8000/api/asistencia/`, {
                 codigo: Codigo,
                 ES: "Entrada",
+                IP: ip,
+                
               })
               .then(() => {
                 setBandera("TRUE");
@@ -40,6 +55,7 @@ function App() {
               .post(`http://127.0.0.1:8000/api/asistencia/`, {
                 codigo: Codigo,
                 ES: "Salida",
+                IP: ip,
               })
               .then(() => {
                 setBandera("False");

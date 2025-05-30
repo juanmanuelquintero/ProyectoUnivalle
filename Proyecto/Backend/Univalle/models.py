@@ -23,6 +23,8 @@ class Asistencia(models.Model):
     codigo = models.IntegerField(db_column='Codigo')  # Field name made lowercase.
     fecha = models.DateTimeField(auto_now_add=True)  # Field name made lowercase.
     ES = models.CharField(db_column='E/S', max_length=50)
+    IP = models.CharField(db_column='Ip_global', max_length=20) 
+
 
     class Meta:
         managed = False
