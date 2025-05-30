@@ -81,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',  # o postgresql, sqlite3, etc.
         'NAME': 'univalle',
         'USER': 'root',
-        'PASSWORD': 'Lopez.12321',
+        'PASSWORD': 'tedesoft',
         'HOST': 'localhost',
         'PORT': '3306',  # o el que uses
     }
