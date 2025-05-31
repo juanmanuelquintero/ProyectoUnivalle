@@ -8,20 +8,26 @@ function App() {
   const [Informacion, setInformacion] = useState([]);
   const [bandera, setBandera] = useState("False");
   const navegar = useNavigate();
-  const [ip , setip] = useState("")
+  const [ip, setip] = useState("");
 
-  useEffect(()=> {
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => setip(data.ip))
-      .catch(() => setip('No se pudo obtener'));
-  },[])
+  useEffect(() => {
+    fetch("https://api.ipify.org?format=json")
+      .then((res) => res.json())
+      .then((data) => {
+        const datosip = data.ip;
+        if (datosip == "45.5.166.131") {
+          setip("Maria inmaculada");
+        } else {
+          console.log(datosip);
+        }
+      })
+      .catch(() => setip("No se pudo obtener"));
+  }, []);
 
-  function Ip () {
-    console.log(ip)
+  function Ip() {
+    console.log(ip);
   }
 
-  
   useEffect(() => {
     if (Codigo.length === 9) {
       Estudiante();
@@ -41,7 +47,6 @@ function App() {
                 codigo: Codigo,
                 ES: "Entrada",
                 IP: ip,
-                
               })
               .then(() => {
                 setBandera("TRUE");
