@@ -28,12 +28,22 @@ class AsistenciaViewSet(viewsets.ModelViewSet):
     serializer_class = AsistenciaSerializer
 
     def get_queryset(self):
-        id = self.request.query_params.get('id')
+        queryset = Asistencia.objects.all()
+        codigo = self.request.query_params.get('codigo')
+        if codigo:
+            queryset = queryset.filter(codigo=codigo)  # si 'codigo' es FK con campo 'codigo' en modelo Usuario
+        return queryset
 
-        if id:
-            return Asistencia.objects.filter(id=id)
-        else:
-            return Asistencia.objects.all()
+    # def get_queryset(self):
+    #     queryset = Asistencia.objects.all()
+    #     #id = self.request.query_params.get('id')
+    #     codigo = self.request.query_params.get('codigo')
+    #     if codigo:
+    #        queryset = queryset.filter(codigo=str(codigo))
+    #     return queryset
+           
+       
+         
 
 @csrf_exempt
 def crear_admins(request):

@@ -4,7 +4,7 @@ from django.contrib.auth.hashers import make_password, check_password
 
 
 class Usuarios(models.Model):
-    codigo = models.IntegerField(db_column='Codigo', primary_key=True)  # Field name made lowercase.
+    codigo = models.CharField(db_column='Codigo',  max_length=50,primary_key=True)  # Field name made lowercase.
     nombre1 = models.CharField(db_column='Nombre1', max_length=50)  # Field name made lowercase.
     nombre2 = models.CharField(db_column='Nombre2', max_length=50, null=True, blank=True)  # Field name made lowercase.
     apellido1 = models.CharField(db_column='Apellido1', max_length=50)  # Field name made lowercase.
@@ -20,8 +20,8 @@ class Usuarios(models.Model):
         db_table = 'usuarios'
 class Asistencia(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    codigo = models.IntegerField(db_column='Codigo')  # Field name made lowercase.
-    fecha = models.DateTimeField(auto_now_add=True)  # Field name made lowercase.
+    codigo = models.CharField(db_column='Codigo',  max_length=50)  # Field name made lowercase.
+    fecha = models.DateTimeField()  # Field name made lowercase.
     ES = models.CharField(db_column='E/S', max_length=50)
     IP = models.CharField(db_column='Ip_global', max_length=20) 
 

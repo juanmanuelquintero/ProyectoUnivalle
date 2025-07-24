@@ -4,11 +4,21 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function App() {
+  const ahora = new Date();
+  const offset = ahora.getTimezoneOffset(); // minutos de desfase UTC
+  const fechaColombia = new Date(ahora.getTime() - offset * 60000);
+  const fechaFormateada = fechaColombia.toISOString(); // ¡ya está en hora local!
+
+// Usar esta fecha para PATCH o POST
+
+
   const [Codigo, setCodigo] = useState("");
   const [Informacion, setInformacion] = useState([]);
   const [bandera, setBandera] = useState("False");
   const navegar = useNavigate();
-  const [ip , setip] = useState("")
+  const [ip , setip] = useState("");
+  let [inOu, setInOu] = useState("Entrada");
+  const [entradas, setEntradas] = useState(0);
 
   useEffect(()=> {
     fetch('https://api.ipify.org?format=json')
@@ -21,6 +31,9 @@ function App() {
     console.log(ip)
   }
 
+  useEffect(() => {
+    contarEntradas();
+  }, []);
   
   useEffect(() => {
     if (Codigo.length === 9) {
@@ -28,7 +41,77 @@ function App() {
     }
   }, [Codigo]);
 
-  function Estudiante() {
+function Estudiante() {
+  if (!Codigo) return;
+
+  axios
+    .get(`http://127.0.0.1:8000/api/usuarios/${Codigo}`)
+    .then((Response) => {
+      const datosUsuario = Response.data;
+      setInformacion(datosUsuario);
+
+      // Determinar tipo de movimiento (Entrada o Salida)
+      const entradaOSalida = datosUsuario.bandera === "FALSE" ? "Entrada" : "Salida";
+
+      // Buscar si ya existe asistencia del estudiante
+      axios
+        .get(`http://127.0.0.1:8000/api/asistencia/?codigo=${Codigo}`)
+        .then((res) => {
+          const asistencia = res.data;
+
+          // Datos comunes para PATCH o POST
+          const datosAsistencia = {
+            ES: entradaOSalida,
+            fecha: fechaFormateada,
+            IP: ip,
+            codigo: Codigo, // Requerido para POST
+          };
+
+          if (asistencia.length > 0) {
+            // Existe asistencia → hacer PATCH
+            const id_actualizar = asistencia[0].id;
+
+            axios
+              .patch(`http://127.0.0.1:8000/api/asistencia/${id_actualizar}/`, datosAsistencia)
+              .then(() => {
+                setBandera("TRUE");
+                CambiarBandera(datosUsuario.bandera === "FALSE" ? "TRUE" : "FALSE");
+                setInOu(entradaOSalida);
+                contarEntradas();
+              })
+              .catch((err) => {
+                console.error("Error actualizando asistencia", err);
+              });
+          } else {
+            // No existe → crear nueva asistencia con POST
+            axios
+              .post(`http://127.0.0.1:8000/api/asistencia/`, datosAsistencia)
+              .then(() => {
+                setBandera("TRUE");
+                CambiarBandera(datosUsuario.bandera === "FALSE" ? "TRUE" : "FALSE");
+                setInOu(entradaOSalida);
+                contarEntradas();
+              })
+              .catch((err) => {
+                console.error("Error creando asistencia", err);
+              });
+          }
+        })
+        .catch((err) => {
+          console.error("Error buscando asistencia", err);
+        });
+    })
+    .catch(() => {
+      alert("El usuario no existe");
+      setInformacion([]);
+      setCodigo("");
+    });
+}
+
+
+
+  /*
+    function Estudiante() {
     if (Codigo) {
       axios
         .get(`http://127.0.0.1:8000/api/usuarios/${Codigo}`)
@@ -36,6 +119,7 @@ function App() {
           const datos = Response.data;
           setInformacion(Response.data);
           if (datos.bandera === "FALSE") {
+            inOu= "Entrada";
             axios
               .post(`http://127.0.0.1:8000/api/asistencia/`, {
                 codigo: Codigo,
@@ -46,11 +130,14 @@ function App() {
               .then(() => {
                 setBandera("TRUE");
                 CambiarBandera("TRUE");
+                setInOu("Entrada");
+                contarEntradas();
               })
               .catch((Error) => {
                 console.log(Error);
               });
           } else if (datos.bandera === "TRUE") {
+            inOu= "Entrada";
             axios
               .post(`http://127.0.0.1:8000/api/asistencia/`, {
                 codigo: Codigo,
@@ -60,6 +147,8 @@ function App() {
               .then(() => {
                 setBandera("False");
                 CambiarBandera("FALSE");
+                setInOu("Salida");
+                contarEntradas();
               })
               .catch((Error) => {
                 console.log(Error);
@@ -74,7 +163,9 @@ function App() {
         });
     }
   }
+  */
 
+  
   function Navegar() {
     navegar("/AdminLogin");
   }
@@ -118,11 +209,33 @@ function App() {
     setInformacion([]);
   }
 
+  function contarEntradas() {
+    axios
+      .get("http://127.0.0.1:8000/api/asistencia/")
+      .then((response) => {
+        const datos = response.data;
+        const totalEntradas = datos.filter((registro) => registro.ES === "Entrada").length;
+        setEntradas(totalEntradas);
+      })
+      .catch((error) => {
+        console.error("Error al contar las entradas:", error);
+      });
+  }
+
+
   return (
     <div className="contenedor1">
-      <div className="contenedor2">
-        <label className="label1">Sistema de ingreso estudiantil</label>
+      <div className="contenedor2" style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "0 10%" // opcional: agrega espacio lateral
+      }}>
+        <label className="label1">Sistema de Ingreso Estudiantil</label>
+
+        <label className="label1">Total Estudiantes: {entradas}</label>
       </div>
+
       <img
         src="./logoUnivalle.jpg"
         style={{
@@ -148,7 +261,7 @@ function App() {
           fontSize: "30px",
         }}
       >
-        Informacion Estudiante
+        Información del Estudiante
       </label>
       <input
         className="inputs1"
@@ -175,7 +288,7 @@ function App() {
                 Informacion.identificacion
               }\n\n${
                 Informacion.programa ? `Programa:${Informacion.programa}` : ""
-              }\n\nRol: ${Informacion.tipo_usuario}`
+              }\n\nRol: ${Informacion.tipo_usuario}\n\nEstado: ${inOu}`
             : ""
         }
         readOnly
