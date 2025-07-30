@@ -9,106 +9,111 @@ function App() {
   const fechaColombia = new Date(ahora.getTime() - offset * 60000);
   const fechaFormateada = fechaColombia.toISOString(); // ¡ya está en hora local!
 
-// Usar esta fecha para PATCH o POST
-
+  // Usar esta fecha para PATCH o POST
 
   const [Codigo, setCodigo] = useState("");
   const [Informacion, setInformacion] = useState([]);
   const [bandera, setBandera] = useState("False");
   const navegar = useNavigate();
-  const [ip , setip] = useState("");
+  const [ip, setip] = useState("");
   let [inOu, setInOu] = useState("Entrada");
   const [entradas, setEntradas] = useState(0);
 
-  useEffect(()=> {
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => setip(data.ip))
-      .catch(() => setip('No se pudo obtener'));
-  },[])
+  useEffect(() => {
+    fetch("https://api.ipify.org?format=json")
+      .then((res) => res.json())
+      .then((data) => setip(data.ip))
+      .catch(() => setip("No se pudo obtener"));
+  }, []);
 
-  function Ip () {
-    console.log(ip)
+  function Ip() {
+    console.log(ip);
   }
 
   useEffect(() => {
     contarEntradas();
   }, []);
-  
+
   useEffect(() => {
     if (Codigo.length === 9) {
       Estudiante();
     }
   }, [Codigo]);
 
-function Estudiante() {
-  if (!Codigo) return;
+  function Estudiante() {
+    if (!Codigo) return;
 
-  axios
-    .get(`http://127.0.0.1:8000/api/usuarios/${Codigo}`)
-    .then((Response) => {
-      const datosUsuario = Response.data;
-      setInformacion(datosUsuario);
+    axios
+      .get(`http://127.0.0.1:8000/api/usuarios/${Codigo}`)
+      .then((Response) => {
+        const datosUsuario = Response.data;
+        setInformacion(datosUsuario);
 
-      // Determinar tipo de movimiento (Entrada o Salida)
-      const entradaOSalida = datosUsuario.bandera === "FALSE" ? "Entrada" : "Salida";
+        // Determinar tipo de movimiento (Entrada o Salida)
+        const entradaOSalida =
+          datosUsuario.bandera === "FALSE" ? "Entrada" : "Salida";
 
-      // Buscar si ya existe asistencia del estudiante
-      axios
-        .get(`http://127.0.0.1:8000/api/asistencia/?codigo=${Codigo}`)
-        .then((res) => {
-          const asistencia = res.data;
+        // Buscar si ya existe asistencia del estudiante
+        axios
+          .get(`http://127.0.0.1:8000/api/asistencia/?codigo=${Codigo}`)
+          .then((res) => {
+            const asistencia = res.data;
 
-          // Datos comunes para PATCH o POST
-          const datosAsistencia = {
-            ES: entradaOSalida,
-            fecha: fechaFormateada,
-            IP: ip,
-            codigo: Codigo, // Requerido para POST
-          };
+            // Datos comunes para PATCH o POST
+            const datosAsistencia = {
+              ES: entradaOSalida,
+              fecha: fechaFormateada,
+              IP: ip,
+              codigo: Codigo, // Requerido para POST
+            };
 
-          if (asistencia.length > 0) {
-            // Existe asistencia → hacer PATCH
-            const id_actualizar = asistencia[0].id;
+            if (asistencia.length > 0) {
+              // Existe asistencia → hacer PATCH
+              const id_actualizar = asistencia[0].id;
 
-            axios
-              .patch(`http://127.0.0.1:8000/api/asistencia/${id_actualizar}/`, datosAsistencia)
-              .then(() => {
-                setBandera("TRUE");
-                CambiarBandera(datosUsuario.bandera === "FALSE" ? "TRUE" : "FALSE");
-                setInOu(entradaOSalida);
-                contarEntradas();
-              })
-              .catch((err) => {
-                console.error("Error actualizando asistencia", err);
-              });
-          } else {
-            // No existe → crear nueva asistencia con POST
-            axios
-              .post(`http://127.0.0.1:8000/api/asistencia/`, datosAsistencia)
-              .then(() => {
-                setBandera("TRUE");
-                CambiarBandera(datosUsuario.bandera === "FALSE" ? "TRUE" : "FALSE");
-                setInOu(entradaOSalida);
-                contarEntradas();
-              })
-              .catch((err) => {
-                console.error("Error creando asistencia", err);
-              });
-          }
-        })
-        .catch((err) => {
-          console.error("Error buscando asistencia", err);
-        });
-    })
-    .catch(() => {
-      alert("El usuario no existe");
-      setInformacion([]);
-      setCodigo("");
-    });
-}
-
-
+              axios
+                .patch(
+                  `http://127.0.0.1:8000/api/asistencia/${id_actualizar}/`,
+                  datosAsistencia
+                )
+                .then(() => {
+                  setBandera("TRUE");
+                  CambiarBandera(
+                    datosUsuario.bandera === "FALSE" ? "TRUE" : "FALSE"
+                  );
+                  setInOu(entradaOSalida);
+                  contarEntradas();
+                })
+                .catch((err) => {
+                  console.error("Error actualizando asistencia", err);
+                });
+            } else {
+              // No existe → crear nueva asistencia con POST
+              axios
+                .post(`http://127.0.0.1:8000/api/asistencia/`, datosAsistencia)
+                .then(() => {
+                  setBandera("TRUE");
+                  CambiarBandera(
+                    datosUsuario.bandera === "FALSE" ? "TRUE" : "FALSE"
+                  );
+                  setInOu(entradaOSalida);
+                  contarEntradas();
+                })
+                .catch((err) => {
+                  console.error("Error creando asistencia", err);
+                });
+            }
+          })
+          .catch((err) => {
+            console.error("Error buscando asistencia", err);
+          });
+      })
+      .catch(() => {
+        alert("El usuario no existe");
+        setInformacion([]);
+        setCodigo("");
+      });
+  }
 
   /*
     function Estudiante() {
@@ -165,9 +170,8 @@ function Estudiante() {
   }
   */
 
-  
   function Navegar() {
-    navegar("/AdminLogin");
+    navegar("/");
   }
 
   // function Post() {
@@ -214,7 +218,9 @@ function Estudiante() {
       .get("http://127.0.0.1:8000/api/asistencia/")
       .then((response) => {
         const datos = response.data;
-        const totalEntradas = datos.filter((registro) => registro.ES === "Entrada").length;
+        const totalEntradas = datos.filter(
+          (registro) => registro.ES === "Entrada"
+        ).length;
         setEntradas(totalEntradas);
       })
       .catch((error) => {
@@ -222,108 +228,108 @@ function Estudiante() {
       });
   }
 
-
   return (
-    <div className="contenedor1">
-      <div className="contenedor2" style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "0 10%" // opcional: agrega espacio lateral
-      }}>
+    <div>
+      <div
+        className="contenedor2"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "0, 2%, 15%", // opcional: agrega espacio lateral
+        }}
+      >
+        <img
+          src="./logoUnivalle.jpg"
+          style={{
+            width: "50px",
+            height: "70px",
+          }}
+        />
         <label className="label1">Sistema de Ingreso Estudiantil</label>
 
         <label className="label1">Total Estudiantes: {entradas}</label>
       </div>
-
-      <img
-        src="./logoUnivalle.jpg"
-        style={{
-          position: "absolute",
-          top: "70%",
-          left: "85%",
-          width: "120px",
-          height: "180px",
-        }}
-      />
-      <label
-        className="label2"
-        style={{ position: "absolute", top: "15%", left: "3%" }}
-      >
-        Codigo Estudiantil
-      </label>
-      <label
-        className="label2"
-        style={{
-          position: "absolute",
-          top: "13%",
-          left: "37%",
-          fontSize: "30px",
-        }}
-      >
-        Información del Estudiante
-      </label>
-      <input
-        className="inputs1"
-        value={Codigo}
-        onChange={(e) => setCodigo(e.target.value)}
-        placeholder="Codigo"
-        autoFocus
-        style={{
-          position: "absolute",
-          top: "20%",
-          left: "2%",
-          fontSize: "20px",
-        }}
-      />
-      <textarea
-        className="tarea"
-        value={
-          Informacion.codigo
-            ? `Código: ${Informacion.codigo}\n\nNombre: ${
-                Informacion.nombre1
-              } ${Informacion.nombre2 || ""}\n\nApellido: ${
-                Informacion.apellido1
-              } ${Informacion.apellido2 || ""}\n\nIndentificacion: ${
-                Informacion.identificacion
-              }\n\n${
-                Informacion.programa ? `Programa:${Informacion.programa}` : ""
-              }\n\nRol: ${Informacion.tipo_usuario}\n\nEstado: ${inOu}`
-            : ""
-        }
-        readOnly
-        style={{ position: "absolute", top: "20%", left: "25%" }}
-      ></textarea>
-      <img
-        className={Informacion.foto ? "foto" : "none"}
-        src={Informacion.foto}
-        style={{
-          position: "absolute",
-          top: "30%",
-          left: "83%",
-          width: "160px",
-          height: "190px",
-        }}
-      />
-      <label
-        className="label3"
-        onClick={Navegar}
-        style={{ position: "absolute", top: "95%", left: "5%" }}
-      >
-        Admin
-      </label>
-      <img
-        className="barrer"
-        onClick={Limpiar}
-        src="./barriendo.png"
-        style={{
-          position: "absolute",
-          top: "45%",
-          left: "7%",
-          width: "60px",
-          height: "60px",
-        }}
-      />
+      <div className="contenedor1">
+        <label
+          className="label2"
+          style={{ position: "absolute", top: "15%", left: "3%" }}
+        >
+          Codigo Estudiantil
+        </label>
+        <label
+          className="label2"
+          style={{
+            position: "absolute",
+            top: "5%",
+            left: "35%",
+            fontSize: "30px",
+          }}
+        >
+          Información del Estudiante
+        </label>
+        <input
+          className="inputs1"
+          value={Codigo}
+          onChange={(e) => setCodigo(e.target.value)}
+          placeholder="Codigo"
+          autoFocus
+          style={{
+            position: "absolute",
+            top: "20%",
+            left: "2%",
+            fontSize: "20px",
+          }}
+        />
+        <textarea
+          className="tarea"
+          value={
+            Informacion.codigo
+              ? `Código: ${Informacion.codigo}\n\nNombre: ${
+                  Informacion.nombre1
+                } ${Informacion.nombre2 || ""}\n\nApellido: ${
+                  Informacion.apellido1
+                } ${Informacion.apellido2 || ""}\n\nIndentificacion: ${
+                  Informacion.identificacion
+                }\n\n${
+                  Informacion.programa ? `Programa:${Informacion.programa}` : ""
+                }\n\nRol: ${Informacion.tipo_usuario}\n\nEstado: ${inOu}`
+              : ""
+          }
+          readOnly
+          style={{ position: "absolute", top: "15%", left: "25%" }}
+        ></textarea>
+        <img
+          className={Informacion.foto ? "foto" : "none"}
+          src={Informacion.foto}
+          style={{
+            position: "absolute",
+            top: "30%",
+            left: "83%",
+            width: "160px",
+            height: "190px",
+          }}
+        />
+        <label
+          className="label3"
+          onClick={Navegar}
+          style={{ position: "absolute", top: "92%", left: "5%" }}
+        >
+          pagina Loguin
+        </label>
+        <img
+          className="barrer"
+          onClick={Limpiar}
+          src="./barriendo.png"
+          style={{
+            position: "absolute",
+            top: "45%",
+            left: "7%",
+            width: "60px",
+            height: "60px",
+          }}
+        />
+      </div>
     </div>
   );
 }
